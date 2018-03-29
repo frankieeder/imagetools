@@ -12,7 +12,6 @@ class ColumnWriter:
         self.final_img = Image.new("RGB", (num_images, 6000))
         c = 0
 
-
     def middle_column(self, img):
         """Returns an Image object that is just the middle column of the input
         img.
