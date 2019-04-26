@@ -1,12 +1,11 @@
 import numpy as np
 import os
-from ..convenience import is_cv3
 import cv2
 import argparse
 
 SOURCE_TYPE = 0
-SOURCE_VIDEO = 0
-SOURCE_FOLDER = 1
+SOURCE_VIDEO = 1
+SOURCE_FOLDER = 0
 
 def count_frames(path, override=False):
     """Found function for counting frames in video using OpenCV.
@@ -76,8 +75,8 @@ def concatenator(source, region, print_status=False):
         print("Starting Concatenation")
     for c, im in enumerate(source_iter(source)):
         if print_status:
-            print(f"Processing {c}/{len(im_list))}")
-        sections.append(im[region])
+            print(f"Processing {c}/{num_frames}")
+        sections.append([im[region]])
     if print_status:
         print("Concatenating...")
     final = np.concatenate(sections, axis=1)
@@ -109,7 +108,7 @@ def video_iter(video):
 def picture_iter(im_folder):
     dirpath, dirnames, filenames = next(os.walk(im_folder))
     for f in filenames:
-        im = np.imread(dirpath + f)
+        im = cv2.imread(dirpath + "/" + f)
         yield im
 
 
@@ -123,7 +122,8 @@ class SliceMaker(object):
     return item
 
 def main(source,
-         video=False,
+         out_file,
+         video=False, #TODO: Implement video (will need class structure)
          length=-1, #TODO: Implement input length
          random_selection=False, #TODO: Implement random selection of frames
          random_section=False, #TODO: Implement random starting section (if not random selection)
@@ -132,11 +132,15 @@ def main(source,
          ):
     assert length < get_num_frames(source)
     SOURCE_TYPE = SOURCE_VIDEO if video else SOURCE_FOLDER
-    final = concatenator(source, SliceMaker()[:,], print_status=True)
-    return final
+    final = concatenator(source, SliceMaker()[:,650], print_status=True)
+    cv2.imwrite(out_file, final)
 
-main("./test.mp4", video=True)
+main(
+    source="./jonah",
+    out_file='./jonah.png'
+)
 
+#TODO: Implement command line args
 """if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process some video or a list of images.')
     parser.add_argument('source', nargs=1)
