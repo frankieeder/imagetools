@@ -1,115 +1,51 @@
 import numpy as np
 import os
 import cv2
+import time
 import argparse
 
-SOURCE_TYPE = 0
-SOURCE_VIDEO = 1
-SOURCE_FOLDER = 0
+class RandomConcatenator:
+    SOURCE_VIDEO = 1
+    SOURCE_FOLDER = 0
+    def __init__(self,
+                 source,
+                 out_file,
+                 video=False,  # TODO: Implement video (will need class structure)
+                 length=-1,  # TODO: Implement input length
+                 random_selection=False,  # TODO: Implement random selection of frames
+                 random_section=False,  # TODO: Implement random starting section (if not random selection)
+                 resize=False, out_w=1920, out_h=1080,  # TODO: Implement output resizing
+                 multiple=False  # TODO: Process multipe folders/files at once
+                 ):
+        self.source = source
+        # TODO: Could implement an iterator for file inputs to concatenator
+        self.source_type = self.SOURCE_VIDEO if video else self.SOURCE_FOLDER
 
-def count_frames(path, override=False):
-    """Found function for counting frames in video using OpenCV.
-    https://www.pyimagesearch.com/2017/01/09/count-the-total-number-of-frames-in-a-video-with-opencv-and-python/
-    """
-    # grab a pointer to the video file and initialize the total
-    # number of frames read
-    video = cv2.VideoCapture(path)
-    total = 0
+    def __next__(self):
+        return concatenate()
 
-    # if the override flag is passed in, revert to the manual
-    # method of counting frames
-    if override:
-        total = count_frames_manual(video)
-        # otherwise, let's try the fast way first
-    else:
-        # lets try to determine the number of frames in a video
-        # via video properties; this method can be very buggy
-        # and might throw an error based on your OpenCV version
-        # or may fail entirely based on your which video codecs
-        # you have installed
-        try:
-            # check if we are using OpenCV 3
-            if is_cv3():
-                total = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
-
-            # otherwise, we are using OpenCV 2.4
-            else:
-                total = int(video.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-
-        # uh-oh, we got an error -- revert to counting manually
-        except:
-            total = count_frames_manual(video)
-
-    # release the video file pointer
-    video.release()
-
-    # return the total number of frames in the video
-    return total
+    def __iter__(self):
+        return self
 
 
-def count_frames_manual(video):
-    # initialize the total number of frames read
-    total = 0
-
-    # loop over the frames of the video
-    while True:
-        # grab the current frame
-        (grabbed, frame) = video.read()
-
-        # check to see if we have reached the end of the
-        # video
-        if not grabbed:
-            break
-
-        # increment the total number of frames read
-        total += 1
-
-    # return the total number of frames in the video file
-    return total
 
 
 def concatenator(source, region, print_status=False):
-    sections = []
     num_frames = get_num_frames(source)
     if print_status:
         print("Starting Concatenation")
     for c, im in enumerate(source_iter(source)):
         if print_status:
             print(f"Processing {c}/{num_frames}")
-        sections.append([im[region]])
-    if print_status:
-        print("Concatenating...")
-    final = np.concatenate(sections, axis=1)
+        section = np.expand_dims(im[region], axis=1)
+        if c == 0:
+            final = section
+        else:
+            final = np.concatenate([final, section], axis=1)
     if print_status:
         print("Done\n")
     return final
 
-
-def get_num_frames(source):
-    if SOURCE_TYPE == SOURCE_VIDEO:
-        return get_num_frames(source)
-    dirpath, dirnames, filenames = next(os.walk(source))
-    return len(filenames)
-
-
-def source_iter(source):
-    if SOURCE_TYPE == SOURCE_VIDEO:
-        return video_iter(source)
-    return picture_iter(source)
-
-
-def video_iter(video):
-    success, image = video.read()
-    while success:
-        yield image
-        success, image = video.read()
-
-
-def picture_iter(im_folder):
-    dirpath, dirnames, filenames = next(os.walk(im_folder))
-    for f in filenames:
-        im = cv2.imread(dirpath + "/" + f)
-        yield im
 
 
 def concatenate(folder_dirs, print_status=False, out_dir="./out"): #TODO: Implement support for multiple folders/files
@@ -127,17 +63,22 @@ def main(source,
          length=-1, #TODO: Implement input length
          random_selection=False, #TODO: Implement random selection of frames
          random_section=False, #TODO: Implement random starting section (if not random selection)
-         resize=False, out_w = 1920, out_h = 1080, #TODO: Implement output resizing
+         resize=False, out_w=1920, out_h=1080, #TODO: Implement output resizing
          multiple=False #TODO: Process multipe folders/files at once
          ):
     assert length < get_num_frames(source)
     SOURCE_TYPE = SOURCE_VIDEO if video else SOURCE_FOLDER
-    final = concatenator(source, SliceMaker()[:,650], print_status=True)
+    start = time.clock()
+    final = concatenator(source, SliceMaker()[:,960], print_status=True)
+    print(time.clock() - start)
+    if resize:
+        final = cv2.resize(src=final, dsize=(out_w, out_h), interpolation=cv2.INTER_NEAREST)
     cv2.imwrite(out_file, final)
 
 main(
     source="./jonah",
-    out_file='./jonah.png'
+    out_file='./jonah.png',
+    resize=True,
 )
 
 #TODO: Implement command line args
