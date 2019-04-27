@@ -5,7 +5,7 @@ import cv2
 import time
 import argparse
 
-class RandomConcatenator(ImageStepper):
+class Concatenator(ImageStepper):
     SOURCE_VIDEO = 1
     SOURCE_FOLDER = 0
     def __init__(self,
@@ -53,14 +53,7 @@ def main(source,
          resize=False, out_w=1920, out_h=1080, #TODO: Implement output resizing
          multiple=False #TODO: Process multipe folders/files at once
          ):
-    assert length < get_num_frames(source)
-    SOURCE_TYPE = SOURCE_VIDEO if video else SOURCE_FOLDER
-    start = time.clock()
-    final = concatenator(source, SliceMaker()[:,960], print_status=True)
-    print(time.clock() - start)
-    if resize:
-        final = cv2.resize(src=final, dsize=(out_w, out_h), interpolation=cv2.INTER_NEAREST)
-    cv2.imwrite(out_file, final)
+
 
 
 
@@ -69,6 +62,12 @@ main(
     out_file='./jonah.png',
     resize=True,
 )
+if __name__ == "__main__":
+    images = SimpleFolderIterator("./jonah")
+    concat = Concatenator(
+        source=images
+    )
+
 
 #TODO: Implement command line args
 """if __name__ == "__main__":
