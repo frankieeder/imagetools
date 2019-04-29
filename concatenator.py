@@ -90,16 +90,55 @@ class CubeConcatenator:
         return self
 
 if __name__ == "__main__":
-    images = SimpleFolderIterator(
-        "/Volumes/My Passport for Mac/Pictures/Design/PROJECTS/55 (Concatenations II)/Video Approach/video jpegs/jonah")
-    concat = CubeConcatenator(
-        source=images,
-        print_status=True,
-        resize=True
-    )
-    for c in range(concat.concat_length):
-        print(f"Saving image {c}")
-        cv2.imwrite(f"./jonah_{c}.jpg", next(concat))
+    if False:
+        images = SimpleFolderIterator(
+            "/Volumes/My Passport for Mac/Pictures/Design/PROJECTS/55 (Concatenations II)/Video Approach/video jpegs/olivia", img_suffix='.jpg')
+        concat = CubeConcatenator(
+            source=images,
+            print_status=True,
+            resize=True
+        )
+        for c in range(concat.concat_length):
+            print(f"Saving image {c}")
+            cv2.imwrite(f"./out/olivia/olivia_{c}.jpg", next(concat))
+
+    if False:
+        images = SimpleFolderIterator(
+            "/Volumes/My Passport for Mac/Pictures/Design/PROJECTS/55 (Concatenations II)/Video Approach/video jpegs/jonah", img_suffix='.jpg')
+        concat = CubeConcatenator(
+            source=images,
+            print_status=True,
+            resize=True
+        )
+        for c in range(concat.concat_length):
+            print(f"Saving image {c}")
+            cv2.imwrite(f"./out/jonah/jonah_{c}.jpg", next(concat))
+
+    if True:
+        images = SimpleFolderIterator(
+            "/Volumes/My Passport for Mac/Pictures/Design/PROJECTS/55 (Concatenations II)/Video Approach/video jpegs/sofia", img_suffix='.jpg')
+        concat = CubeConcatenator(
+            source=images,
+            print_status=True,
+            resize=True
+        )
+        for c in range(concat.concat_length):
+            print(f"Saving image {c}")
+            cv2.imwrite(f"./out/sofia/sofia_{c}.jpg", next(concat))
+
+    if True:
+        images = SimpleFolderIterator(
+            "/Volumes/My Passport for Mac/Pictures/Design/PROJECTS/55 (Concatenations II)/Video Approach/video jpegs/steve", img_suffix='.jpg')
+        concat = CubeConcatenator(
+            source=images,
+            print_status=True,
+            resize=True
+        )
+        for c in range(concat.concat_length):
+            print(f"Saving image {c}")
+            cv2.imwrite(f"./out/steve/steve_{c}.jpg", next(concat))
+
+
 
 
 #TODO: Implement command line args
