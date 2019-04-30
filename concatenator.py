@@ -114,7 +114,7 @@ if __name__ == "__main__":
             print(f"Saving image {c}")
             cv2.imwrite(f"./out/jonah/jonah_{c}.jpg", next(concat))
 
-    if True:
+    if False:
         images = SimpleFolderIterator(
             "/Volumes/My Passport for Mac/Pictures/Design/PROJECTS/55 (Concatenations II)/Video Approach/video jpegs/sofia", img_suffix='.jpg')
         concat = CubeConcatenator(
