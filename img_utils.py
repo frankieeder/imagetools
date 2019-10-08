@@ -22,15 +22,18 @@ class ImageSource(ImageStepper):
         self.source = None  # NOTE: Subclasses must define a source
 
 class SimpleFolderIterator(ImageSource):
-    def __init__(self, source_path):
-        super(source_path)
+    def __init__(self, source_path, img_suffix='.jpg'):
+        super().__init__(source_path)
         self.source = self.picture_iter(self.source_path)
+        self.img_suffix = img_suffix
 
-    def picture_iter(im_folder):
+    def picture_iter(self, im_folder):
         dirpath, dirnames, filenames = next(os.walk(im_folder))
+        filenames = sorted(filenames)
         for f in filenames:
-            im = cv2.imread(dirpath + "/" + f)
-            yield im
+            if f[-len(self.img_suffix):] in self.img_suffix:
+                im = cv2.imread(dirpath + "/" + f)
+                yield im
 
     def __len__(self):
         dirpath, dirnames, filenames = next(os.walk(self.source_path))
@@ -44,7 +47,7 @@ def RandomFolderIterator(ImageSource):
 # TODO: Finish this source
 class VideoIterator(ImageSource):
     def __init__(self, source_path):
-        super()
+        super().__init__(source_path)
         self.video = cv2.VideoCapture(self.source_path)
         self.source = self.video_iter(self.video)
 
