@@ -119,3 +119,8 @@ class VideoIterator(ImageSource):
 class SliceMaker(object):
   def __getitem__(self, item):
     return item
+
+def mat2gray(A):
+    out = np.zeros(A.shape, np.double)
+    normalized = cv2.normalize(A, out, 1.0, 0.0, cv2.NORM_MINMAX, dtype=cv2.CV_64F)
+    return out
