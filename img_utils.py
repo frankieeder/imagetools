@@ -131,3 +131,7 @@ def mat2gray(A):
 def isKthBitOne(n, k):
     """Returns true if the k'th bit of n is 1."""
     return n & (1 << k)
+
+def largestEvenLTE(n):
+    """Returns the largest even number less than or equal to the input n."""
+    return int(n - (n % 2))
