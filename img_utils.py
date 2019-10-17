@@ -127,3 +127,7 @@ def mat2gray(A):
     out = np.zeros(A.shape, np.double)
     normalized = cv2.normalize(A, out, 1.0, 0.0, cv2.NORM_MINMAX, dtype=cv2.CV_64F)
     return out
+
+def isKthBitOne(n, k):
+    """Returns true if the k'th bit of n is 1."""
+    return n & (1 << k)

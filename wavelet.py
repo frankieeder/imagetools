@@ -1,10 +1,10 @@
 import numpy as np
 import cv2
-from img_utils import mat2gray
+from img_utils import isKthBitOne
 
 DEBUG = False
 
-def transform_haar(mat, axes=[0, 1], depths=[8, 8], remove_zones={}, pad=False):
+def transform_haar(mat, axes=[0, 1], depths=[8, 8], remove_zones=[], pad=False):
     "NOTE: Destructive"
     assert len(axes) == len(depths)
     # Base Case
@@ -23,7 +23,7 @@ def transform_haar(mat, axes=[0, 1], depths=[8, 8], remove_zones={}, pad=False):
         half1_index[axis] = slice(0, int(mat.shape[axis] / 2))
         half1_index = tuple(half1_index)
         half2_index = [slice(None) for _ in mat.shape]
-        half2_index[axis] = slice(int(mat.shape[axis] / 2), int(mat.shape[axis]))
+        half2_index[axis] = slice(int(mat.shape[axis] / 2), mat.shape[axis])
         half2_index = tuple(half2_index)
 
         # Determine indices for the even and odd halves of the image (along this axis)
@@ -70,17 +70,48 @@ def transform_haar(mat, axes=[0, 1], depths=[8, 8], remove_zones={}, pad=False):
     mat[LP_area_index] = transform_haar(
         mat=mat[LP_area_index],
         axes=remaining_axes,
-        depths=remaining_depths
+        depths=remaining_depths,
+        remove_zones=remove_zones
     )
 
     # Remove zones, if passed in.
     # We model our structure as a hypercube where each the first and second half of each image
-    # along a given axis is a vertex in that axis, so for a 2D image, we have:
-    # 00--01
+    # along a given axis is a vertex in that axis. We structure so that the least significant bit
+    # corresponds to axis 0, the second least significant bit corresponds to axis 1, etc.
+    #
+    # So for a 2D image, we have:
+    #
+    # 00--10
     # |   |
-    # 10--11
+    # 01--11
+    #
+    # or for 3D:
+    #
+    # 000 ---- 010
+    #  |  \     |  \
+    #  |  100 --|- 110
+    #  |   |    |   |
+    # 001 ---- 011  |
+    #     \|       \|
+    #     101 ---- 111
+    #
+    # We assume that we would only remove zones from the axes that we are operating on. As such, we will
+    # only check the bits corresponding to those axes when looking at remove_zones.
+    #
+
     for zone in remove_zones:
-        ...
+        # we want to make a slice isolating the zone given by the number in the above specifications
+        zone_region_index = [slice(None) for _ in mat.shape]
+        for axis in axes:
+            if isKthBitOne(zone, axis):  # If this bit is 1
+                # Insert slice representing second half of this index
+                zone_region_index[axis] = slice(int(mat.shape[axis] / 2), mat.shape[axis])
+            else:  # If this bit is 0
+                # Insert slice representing first half of this index
+                zone_region_index[axis] = slice(0, int(mat.shape[axis] / 2))
+        zone_region_index = tuple(zone_region_index)  # Convert to tuple
+        mat[zone_region_index] = 0
+
 
     # Return Result
     return mat
@@ -128,7 +159,7 @@ def transform_haar_inverse(mat, axes=[0, 1], depths=[8, 8]):
         half1_index[axis] = slice(0, int(mat.shape[axis] / 2))
         half1_index = tuple(half1_index)
         half2_index = [slice(None) for _ in mat.shape]
-        half2_index[axis] = slice(int(mat.shape[axis] / 2), int(mat.shape[axis]))
+        half2_index[axis] = slice(int(mat.shape[axis] / 2), mat.shape[axis])
         half2_index = tuple(half2_index)
 
         # Determine indices for the even and odd halves of the image (along this axis)
@@ -158,12 +189,18 @@ def transform_haar_inverse(mat, axes=[0, 1], depths=[8, 8]):
     return mat
 
 
+def decimate_haar(mat, axes, depths, remove_zones=[]):
+    transform_haar(mat, axes, depths, remove_zones)
+    transform_haar_inverse(mat, axes, depths)
+
 im = cv2.imread("test.jpg").astype(np.double)
-transform_haar(im, [0, 1], [3, 6])
-cv2.imwrite("testout.jpg", im)
-transform_haar_inverse(im, [0, 1], [3, 6])
+decimate_haar(
+    mat=im,
+    axes=[0, 1],
+    depths=[10, 10],
+    remove_zones=[3]
+)
 cv2.imwrite("testoutreconstruct.jpg", im)
-x=2
 
 
 
