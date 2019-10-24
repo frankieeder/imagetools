@@ -197,14 +197,16 @@ def decimate_haar(mat, axes, depths, remove_zones=[]):
     transform_haar(mat, axes, depths, remove_zones)
     transform_haar_inverse(mat, axes, depths)
 
-im = cv2.imread("moonlight019.jpg").astype(np.double)
-decimate_haar(
-    mat=im,
-    axes=[0, 1],
-    depths=[10, 10],
-    remove_zones=[3]
-)
-cv2.imwrite("testoutreconstruct.jpg", im)
+
+if __name__ == "__main__":
+    im = cv2.imread("DSC01344.TIF").astype(np.double)
+    decimate_haar(
+        mat=im,
+        axes=[0, 1],
+        depths=[11, 11],
+        remove_zones=[1, 2]
+    )
+    cv2.imwrite("testoutreconstruct.jpg", im)
 
 
 
