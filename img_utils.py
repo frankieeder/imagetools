@@ -40,9 +40,9 @@ class SimpleFolderIterator(ImageSource):
         return len(filenames)
 
 # TODO: Finish this source
-def RandomFolderIterator(ImageSource):
-    random_selection = False,  # TODO: Implement random selection of frames
-    random_section = False,  # TODO: Implement random starting section (if not random selection)
+class RandomFolderIterator(ImageSource):
+    random_selection = False  # TODO: Implement random selection of frames
+    random_section = False  # TODO: Implement random starting section (if not random selection)
 
 # TODO: Finish this source
 class VideoIterator(ImageSource):
@@ -54,13 +54,13 @@ class VideoIterator(ImageSource):
     def __len__(self):
         return self.count_frames(self.video)
 
-    def video_iter(self, video_file):
-        success, image = video_file.read()
+    def video_iter(self):
+        success, image = self.video.read()
         while success:
             yield image
-            success, image = video_file.read()
+            success, image = self.video.read()
 
-    def count_frames(self, video_file, override=False):
+    def count_frames(self, override=False):
         """Found function for counting frames in video using OpenCV.
         https://www.pyimagesearch.com/2017/01/09/count-the-total-number-of-frames-in-a-video-with-opencv-and-python/
         """
@@ -72,7 +72,7 @@ class VideoIterator(ImageSource):
         # if the override flag is passed in, revert to the manual
         # method of counting frames
         if override:
-            total = self.count_frames_manual(video_file)
+            total = self.count_frames_manual()
             # otherwise, let's try the fast way first
         else:
             # lets try to determine the number of frames in a video
@@ -81,32 +81,34 @@ class VideoIterator(ImageSource):
             # or may fail entirely based on your which video codecs
             # you have installed
             try:
+                '''
                 # check if we are using OpenCV 3
                 if is_cv3():
                     total = int(video_file.get(cv2.CAP_PROP_FRAME_COUNT))
-
+                
                 # otherwise, we are using OpenCV 2.4
                 else:
-                    total = int(video_file.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+                '''
+                total = int(self.video.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
             # uh-oh, we got an error -- revert to counting manually
             except:
-                total = self.count_frames_manual(video_file)
+                total = self.count_frames_manual()
 
         # release the video file pointer
-        video_file.release()
+        self.video.release()
 
         # return the total number of frames in the video
         return total
 
-    def count_frames_manual(self, video_file):
+    def count_frames_manual(self):
         # initialize the total number of frames read
         total = 0
 
         # loop over the frames of the video
         while True:
             # grab the current frame
-            (grabbed, frame) = video_file.read()
+            (grabbed, frame) = self.video.read()
 
             # check to see if we have reached the end of the
             # video
