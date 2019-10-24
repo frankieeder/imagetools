@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from img_utils import isKthBitOne, largestEvenLTE
+from .img_utils import isKthBitOne, largestEvenLTE
 
 DEBUG = False
 
@@ -207,8 +207,3 @@ if __name__ == "__main__":
         remove_zones=[1, 2]
     )
     cv2.imwrite("testoutreconstruct.jpg", im)
-
-
-
-
-
