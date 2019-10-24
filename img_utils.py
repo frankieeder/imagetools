@@ -52,15 +52,15 @@ class VideoIterator(ImageSource):
         self.source = self.video_iter(self.video)
 
     def __len__(self):
-        return self.count_frames(self.video)\
+        return self.count_frames(self.video)
 
-    def video_iter(video):
-        success, image = video.read()
+    def video_iter(self, video_file):
+        success, image = video_file.read()
         while success:
             yield image
-            success, image = video.read()
+            success, image = video_file.read()
 
-    def count_frames(path, override=False):
+    def count_frames(self, video_file, override=False):
         """Found function for counting frames in video using OpenCV.
         https://www.pyimagesearch.com/2017/01/09/count-the-total-number-of-frames-in-a-video-with-opencv-and-python/
         """
@@ -72,7 +72,7 @@ class VideoIterator(ImageSource):
         # if the override flag is passed in, revert to the manual
         # method of counting frames
         if override:
-            total = count_frames_manual(video)
+            total = self.count_frames_manual(video_file)
             # otherwise, let's try the fast way first
         else:
             # lets try to determine the number of frames in a video
@@ -83,30 +83,30 @@ class VideoIterator(ImageSource):
             try:
                 # check if we are using OpenCV 3
                 if is_cv3():
-                    total = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+                    total = int(video_file.get(cv2.CAP_PROP_FRAME_COUNT))
 
                 # otherwise, we are using OpenCV 2.4
                 else:
-                    total = int(video.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+                    total = int(video_file.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
 
             # uh-oh, we got an error -- revert to counting manually
             except:
-                total = count_frames_manual(video)
+                total = self.count_frames_manual(video_file)
 
         # release the video file pointer
-        video.release()
+        video_file.release()
 
         # return the total number of frames in the video
         return total
 
-    def count_frames_manual(video):
+    def count_frames_manual(self, video_file):
         # initialize the total number of frames read
         total = 0
 
         # loop over the frames of the video
         while True:
             # grab the current frame
-            (grabbed, frame) = video.read()
+            (grabbed, frame) = video_file.read()
 
             # check to see if we have reached the end of the
             # video
