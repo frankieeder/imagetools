@@ -6,7 +6,7 @@ import time
 class ImageStepper:
     def __init__(self, source):
         self.source = source
-    
+
     def __len__(self):
         pass
 
@@ -49,10 +49,10 @@ class VideoIterator(ImageSource):
     def __init__(self, source_path):
         super().__init__(source_path)
         self.video = cv2.VideoCapture(self.source_path)
-        self.source = self.video_iter(self.video)
+        self.source = self.video_iter()
 
     def __len__(self):
-        return self.count_frames(self.video)
+        return self.count_frames()
 
     def video_iter(self):
         success, image = self.video.read()
@@ -60,7 +60,7 @@ class VideoIterator(ImageSource):
             yield image
             success, image = self.video.read()
 
-    def count_frames(self, override=False):
+    def count_frames(self, manual_count=False):
         """Found function for counting frames in video using OpenCV.
         https://www.pyimagesearch.com/2017/01/09/count-the-total-number-of-frames-in-a-video-with-opencv-and-python/
         """
@@ -71,7 +71,7 @@ class VideoIterator(ImageSource):
 
         # if the override flag is passed in, revert to the manual
         # method of counting frames
-        if override:
+        if manual_count:
             total = self.count_frames_manual()
             # otherwise, let's try the fast way first
         else:
@@ -85,14 +85,13 @@ class VideoIterator(ImageSource):
                 # check if we are using OpenCV 3
                 if is_cv3():
                     total = int(video_file.get(cv2.CAP_PROP_FRAME_COUNT))
-                
+
                 # otherwise, we are using OpenCV 2.4
                 else:
                 '''
-                total = int(self.video.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-
+                total = int(self.video.get(cv2.CAP_PROP_FRAME_COUNT))
             # uh-oh, we got an error -- revert to counting manually
-            except:
+            except e:
                 total = self.count_frames_manual()
 
         # release the video file pointer
@@ -107,6 +106,7 @@ class VideoIterator(ImageSource):
 
         # loop over the frames of the video
         while True:
+            print(total)
             # grab the current frame
             (grabbed, frame) = self.video.read()
 
