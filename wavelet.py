@@ -204,7 +204,7 @@ if __name__ == "__main__":
         mat=im,
         axes=[0, 1],
         depths=[11, 11],
-        remove_zones=[1, 2]
+        remove_zones=[]
     )
     cv2.imwrite("testoutreconstruct.jpg", im)
 
