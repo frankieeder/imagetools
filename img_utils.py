@@ -135,7 +135,7 @@ class VideoBlockIterator(VideoIterator):
         for i, frame in enumerate(all_frames):
             frame_buffer.append(frame)
             if i % self.block_length == 0:
-                frame_block = np.stack(frame_buffer, 2)
+                frame_block = np.stack(frame_buffer)
                 yield frame_block
                 del frame_block
                 frame_buffer = []
