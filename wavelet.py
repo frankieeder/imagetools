@@ -4,9 +4,17 @@ from .img_utils import isKthBitOne, largestEvenLTE
 
 DEBUG = False
 
-def transform_haar(mat, axes=[0, 1], depths=[8, 8], remove_zones=[], pad=False):
-    "NOTE: Destructive"
+def transform_haar(mat, axes=[0, 1], depths=[8, 8], remove_zones=[], copy=True):
+    "NOTE: Destructive unless copy=True"
+    # Pre-Processing
     assert len(axes) == len(depths)
+    # Copy
+    if copy:
+        mat = mat.copy()
+    # Check dtype
+    if mat.dtype != np.double:
+        mat = mat.astype(np.double, copy=False)
+
     # Base Case
     if not axes:
         return mat
@@ -21,15 +29,12 @@ def transform_haar(mat, axes=[0, 1], depths=[8, 8], remove_zones=[], pad=False):
         half1_index, half2_index, even_index, odd_index = haar_indices(mat.shape, axis)
 
         # Perform haar wavelet transform
-        additions = mat[odd_index] + mat[even_index]
-        subtractions = mat[odd_index] - mat[even_index]
+        additions = (mat[odd_index] + mat[even_index]) / (2 ** 0.5)
+        subtractions = (mat[odd_index] - mat[even_index]) / (2 ** 0.5)
 
         # Save Highpass and Lowpass sections into corresponding halves of the image
         mat[half1_index] = additions
         mat[half2_index] = subtractions
-
-        # Normalize by sqrt 2 as given in 1D wavelet transform
-        mat /= (2 ** 0.5)
 
         if DEBUG:
             cv2.imwrite(f"axis{axis}depth{depth}additions.png", additions)
@@ -54,7 +59,8 @@ def transform_haar(mat, axes=[0, 1], depths=[8, 8], remove_zones=[], pad=False):
         mat=mat[LP_area_index],
         axes=remaining_axes,
         depths=remaining_depths,
-        remove_zones=remove_zones
+        remove_zones=remove_zones,
+        copy=False  # Make sure not to make unecessary data copies in this recursive call
     )
 
     # Remove zones, if passed in.
@@ -96,13 +102,19 @@ def transform_haar(mat, axes=[0, 1], depths=[8, 8], remove_zones=[], pad=False):
         zone_region_index = tuple(zone_region_index)  # Convert to tuple
         mat[zone_region_index] = 0
 
-
     # Return Result
     return mat
 
-def transform_haar_inverse(mat, axes=[0, 1], depths=[8, 8]):
+def transform_haar_inverse(mat, axes=[0, 1], depths=[8, 8], copy=True):
     """Inverse of above"""
+    # Pre-Processing
     assert len(axes) == len(depths)
+    # Copy
+    if copy:
+        mat = mat.copy()
+    # Check dtype
+    if mat.dtype != np.double:
+        mat = mat.astype(np.double, copy=False)
 
     # Base Case
     if not axes:
@@ -124,7 +136,8 @@ def transform_haar_inverse(mat, axes=[0, 1], depths=[8, 8]):
     mat[LP_area_index] = transform_haar_inverse(
         mat=mat[LP_area_index],
         axes=remaining_axes,
-        depths=remaining_depths
+        depths=remaining_depths,
+        copy=False  # Make sure not to make unecessary data copies in this recursive call
     )
 
     # Perform Inverse 1D Haar Wavelet Transform axis by axis
@@ -137,15 +150,12 @@ def transform_haar_inverse(mat, axes=[0, 1], depths=[8, 8]):
         half1_index, half2_index, even_index, odd_index = haar_indices(mat.shape, axis)
 
         # Perform inverse haar wavelet transform
-        reconstructed_odds = mat[half1_index] + mat[half2_index]
-        reconstructed_evens = mat[half1_index] - mat[half2_index]
+        reconstructed_odds = (mat[half1_index] + mat[half2_index]) / (2 ** 0.5)
+        reconstructed_evens = (mat[half1_index] - mat[half2_index]) / (2 ** 0.5)
 
         # Save Highpass and Lowpass sections into corresponding halves of the image
         mat[even_index] = reconstructed_evens
         mat[odd_index] = reconstructed_odds
-
-        # Normalize by sqrt 2 as given in 1D wavelet transform
-        mat /= (2 ** 0.5)
 
         if DEBUG:
             cv2.imwrite(f"axis{axis}depth{depth}evens-inverse.png", reconstructed_evens)
@@ -193,17 +203,31 @@ def LP_section(shape, axes):
 def null_slice(shape):
     return [slice(None) for _ in shape]
 
-def decimate_haar(mat, axes, depths, remove_zones=[]):
-    transform_haar(mat, axes, depths, remove_zones)
-    transform_haar_inverse(mat, axes, depths)
+def decimate_haar(mat, axes, depths, remove_zones=[], copy=True):
+    mat = transform_haar(mat, axes, depths, remove_zones, copy)
+    mat = transform_haar_inverse(mat, axes, depths, copy)
+    return mat
 
 
 if __name__ == "__main__":
+    # End-to-end sanity Test
+    test_h = 5
+    test_w = 13
+    test_mat = np.arange(test_h*test_w).reshape((test_h, test_w))
+    test_out = decimate_haar(
+        mat=test_mat,
+        axes=[0, 1],
+        depths=[1, 2]
+    )
+    assert np.isclose(test_mat, test_out).all()
+
+    # Visual Test
     im = cv2.imread("DSC01344.TIF").astype(np.double)
-    decimate_haar(
+    im = decimate_haar(
         mat=im,
         axes=[0, 1],
         depths=[11, 11],
-        remove_zones=[]
+        remove_zones=[1, 3]
     )
     cv2.imwrite("testoutreconstruct.jpg", im)
+
