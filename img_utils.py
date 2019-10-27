@@ -44,7 +44,6 @@ class RandomFolderIterator(ImageSource):
     random_selection = False  # TODO: Implement random selection of frames
     random_section = False  # TODO: Implement random starting section (if not random selection)
 
-# TODO: Finish this source
 class VideoIterator(ImageSource):
     def __init__(self, source_path):
         super().__init__(source_path)
@@ -120,6 +119,27 @@ class VideoIterator(ImageSource):
 
         # return the total number of frames in the video file
         return total
+
+# ROUGH:
+class VideoBlockIterator(VideoIterator):
+    def __init__(self, source_path, block_length):
+        super().__init__(source_path)
+        self.block_length = block_length
+
+    def __len__(self):
+        return (self.count_frames() // block_length) + 1
+
+    def video_iter(self):
+        all_frames = super().video_iter()
+        frame_buffer = []
+        for i, frame in enumerate(all_frames):
+            frame_buffer.append(frame)
+            if i % self.block_length == 0:
+                frame_block = np.stack(frame_buffer, 2)
+                yield frame_block
+                del frame_block
+                frame_buffer = []
+
 
 class SliceMaker(object):
   def __getitem__(self, item):
